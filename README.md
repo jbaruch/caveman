@@ -12,6 +12,7 @@
   <a href="https://github.com/JuliusBrussee/caveman/stargazers"><img src="https://img.shields.io/github/stars/JuliusBrussee/caveman?style=flat&color=yellow" alt="Stars"></a>
   <a href="https://github.com/JuliusBrussee/caveman/commits/main"><img src="https://img.shields.io/github/last-commit/JuliusBrussee/caveman?style=flat" alt="Last Commit"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/JuliusBrussee/caveman?style=flat" alt="License"></a>
+  <a href="https://tessl.io/registry/juliusbrussee/caveman"><img src="https://img.shields.io/badge/tessl-quality%20100%25-brightgreen?style=flat" alt="Tessl Quality"></a>
 </p>
 
 <p align="center">
@@ -19,13 +20,12 @@
   <a href="#install">Install</a> •
   <a href="#intensity-levels">Levels</a> •
   <a href="#caveman-skills">Skills</a> •
-  <a href="#benchmarks">Benchmarks</a> •
-  <a href="#evals">Evals</a>
+  <a href="#benchmarks-and-evals">Benchmarks and Evals</a>
 </p>
 
 ---
 
-A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skill/plugin and Codex plugin that makes agent talk like caveman — cutting **~75% of output tokens** while keeping full technical accuracy. Now with [文言文 mode](#文言文-wenyan-mode), [terse commits](#caveman-commit), [one-line code reviews](#caveman-review), and a [compression tool](#caveman-compress) that cuts **~46% of input tokens** every session.
+A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skill/plugin, Codex plugin, and [Tessl](https://tessl.io/registry/juliusbrussee/caveman) plugin that makes agent talk like caveman — cutting **~75% of output tokens** while keeping full technical accuracy. Now with [文言文 mode](#文言文-wenyan-mode), [terse commits](#caveman-commit), [one-line code reviews](#caveman-review), and a [compression tool](#caveman-compress) that cuts **~46% of input tokens** every session.
 
 Based on the viral observation that caveman-speak dramatically reduces LLM token usage without losing technical substance. So we made it a one-line install.
 
@@ -116,13 +116,15 @@ Based on the viral observation that caveman-speak dramatically reduces LLM token
 
 - **Faster response** — less token to generate = speed go brrr
 - **Easier to read** — no wall of text, just the answer
-- **Same accuracy** — all technical info kept, only fluff removed ([science say so](https://arxiv.org/abs/2604.00025))
+- **Same accuracy** — all technical info kept, only fluff removed ([science say so](https://arxiv.org/abs/2604.00025), [evals prove it](#same-quality--same-brain))
 - **Save money** — ~71% less output token = less cost
 - **Fun** — every code review become comedy
 
 ## Install
 
-Pick your agent. One command. Done.
+Any agent: `tessl install juliusbrussee/caveman` — auto-configures for [Claude Code, Cursor, Codex, Gemini, Copilot, and more](https://tessl.io/registry/juliusbrussee/caveman).
+
+Or pick your agent directly:
 
 | Agent | Install |
 |-------|---------|
@@ -359,7 +361,36 @@ CLAUDE.original.md ← human-readable backup (you read and edit this)
 
 Code blocks, URLs, file paths, commands, headings, dates, version numbers — anything technical passes through untouched. Only prose gets compressed. See the full [caveman-compress README](caveman-compress/README.md) for details. [Security note](./caveman-compress/SECURITY.md): Snyk flags this as High Risk due to subprocess/file patterns — it's a false positive.
 
-## Benchmarks
+## Benchmarks and Evals
+
+Caveman not just claim. Caveman **prove**.
+
+### Same quality — same brain
+
+Token go down. But brain stay same? 38 [Tessl task eval](https://docs.tessl.io/evaluate/evaluate-skill-quality-using-scenarios) scenarios test whether caveman degrades technical correctness: 35 coding problems across 10 languages (JS, TS, Python, Go, Rust, Java, CSS, SQL, HCL, YAML) + 3 negative cases (hallucination trap, harmful request refusal, ambiguous input). Each scenario scored against weighted technical checklists — zero style points, only facts. Run with and without caveman, compare.
+
+19 independent runs across 4 agents:
+
+| Agent | Runs | Baseline | Caveman | Delta |
+|-------|------|----------|---------|-------|
+| Claude Sonnet 4.6 | 10 | 97.6% | 96.5% | -1.1 |
+| Cursor Composer 2 | 3 | 97.7% | 96.7% | -1.0 |
+| Codex GPT-5.4 | 3 | 97.0% | 96.7% | -0.3 |
+| Claude Haiku 4.5 | 3 | 94.3% | 94.0% | -0.3 |
+
+Delta never exceed 1.1 percentage point. On some scenarios caveman score **higher** than baseline — brevity force model to focus. Fewer word, same brain, as [found by research](https://arxiv.org/abs/2604.00025) that show brevity constraints **improved accuracy by 26 percentage points** on certain benchmarks. [Full results on Tessl](https://tessl.io/eval-runs/019d9ce5-3e4a-71ac-81fb-e8de7c5de827).
+
+Quality evals contributed by [Baruch Sadogursky](https://github.com/jbaruch) using [Tessl](https://tessl.io) eval infrastructure. Thanks Tessl cave-friends. 🪨
+
+Reproduce:
+
+```bash
+tessl install juliusbrussee/caveman
+tessl eval run skills/caveman --agent claude:claude-sonnet-4-6 \
+  --variant without-context --variant with-context
+```
+
+### ...but for significantly less tokens
 
 Real token counts from the Claude API ([reproduce it yourself](benchmarks/)):
 
@@ -384,13 +415,7 @@ Real token counts from the Claude API ([reproduce it yourself](benchmarks/)):
 > [!IMPORTANT]
 > Caveman only affects output tokens — thinking/reasoning tokens are untouched. Caveman no make brain smaller. Caveman make *mouth* smaller. Biggest win is **readability and speed**, cost savings are a bonus.
 
-A March 2026 paper ["Brevity Constraints Reverse Performance Hierarchies in Language Models"](https://arxiv.org/abs/2604.00025) found that constraining large models to brief responses **improved accuracy by 26 percentage points** on certain benchmarks and completely reversed performance hierarchies. Verbose not always better. Sometimes less word = more correct.
-
-## Evals
-
-Caveman not just claim 75%. Caveman **prove** it.
-
-The `evals/` directory has a three-arm eval harness that measures real token compression against a proper control — not just "verbose vs skill" but "terse vs skill". Because comparing caveman to verbose Claude conflate the skill with generic terseness. That cheating. Caveman not cheat.
+The `evals/` directory has a three-arm eval harness that isolate caveman's contribution from generic terseness — compare "terse vs skill", not "verbose vs skill". That the honest delta. Reproduce:
 
 ```bash
 # Run the eval (needs claude CLI)
